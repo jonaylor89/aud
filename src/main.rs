@@ -1,6 +1,7 @@
 mod player;
 mod ui;
 mod controls;
+mod waveform;
 
 use crossterm::{
     execute,
@@ -32,7 +33,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     })?;
 
     let duration = player.duration();
-    let mut ui_state = UIState::new(audio_path, duration);
+    let waveform = player.waveform().to_vec();
+    let mut ui_state = UIState::new(audio_path, duration, waveform);
 
     enable_raw_mode()?;
     let mut stdout = io::stdout();
