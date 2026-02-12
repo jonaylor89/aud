@@ -88,7 +88,6 @@ fn render_waveform(frame: &mut Frame, area: Rect, state: &UIState) {
     let waveform_color = match state.state {
         PlaybackState::Playing => Color::Cyan,
         PlaybackState::Paused => Color::Yellow,
-        PlaybackState::Stopped => Color::DarkGray,
     };
 
     let sparkline = Sparkline::default()
@@ -103,13 +102,11 @@ fn render_title(frame: &mut Frame, area: Rect, state: &UIState) {
     let status_symbol = match state.state {
         PlaybackState::Playing => "▶",
         PlaybackState::Paused => "⏸",
-        PlaybackState::Stopped => "⏹",
     };
 
     let status_color = match state.state {
         PlaybackState::Playing => Color::Green,
         PlaybackState::Paused => Color::Yellow,
-        PlaybackState::Stopped => Color::Red,
     };
 
     let title = Paragraph::new(Line::from(vec![

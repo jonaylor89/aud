@@ -11,7 +11,6 @@ use crate::waveform;
 pub enum PlaybackState {
     Playing,
     Paused,
-    Stopped,
 }
 
 pub struct Player {
@@ -60,13 +59,8 @@ impl Player {
         let state = *self.state.lock().unwrap();
         match state {
             PlaybackState::Playing => self.pause(),
-            PlaybackState::Paused | PlaybackState::Stopped => self.play(),
+            PlaybackState::Paused => self.play(),
         }
-    }
-
-    pub fn stop(&self) {
-        self.sink.stop();
-        *self.state.lock().unwrap() = PlaybackState::Stopped;
     }
 
     pub fn set_volume(&self, volume: f32) {
