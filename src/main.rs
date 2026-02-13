@@ -4,43 +4,38 @@ mod controls;
 mod waveform;
 mod spectrum;
 mod tee_source;
+mod config;
 
 use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use ratatui::{backend::CrosstermBackend, Terminal};
-use std::env;
 use std::io;
 use std::process;
 
+use crate::config::Config;
 use crate::controls::{handle_input, ControlAction};
 use crate::player::Player;
 use crate::ui::UIState;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args: Vec<String> = env::args().collect();
+    let config = Config::from_args();
 
-    let mut use_spectrum = false;
-    let mut audio_path: Option<&String> = None;
+    let spectrum_config = if config.use_visualizer {
+        Some((config.num_bars, config.smoothing, config.bass_boost))
+    } else {
+        None
+    };
 
-    for arg in args.iter().skip(1) {
-        if arg == "--visualizer" || arg == "-v" {
-            use_spectrum = true;
-        } else if !arg.starts_with('-') {
-            audio_path = Some(arg);
-        }
-    }
-
-    let audio_path = audio_path.unwrap_or_else(|| {
-        eprintln!("Usage: {} [--visualizer|-v] <audio_file>", args[0]);
-        eprintln!("\nSupported formats: MP3, WAV, FLAC, OGG, AAC/M4A");
-        eprintln!("\nOptions:");
-        eprintln!("  --visualizer, -v    Enable live spectrum analyzer bars");
-        process::exit(1);
-    });
-
-    let player = Player::new(audio_path, false, use_spectrum).map_err(|e| {
+    let player = Player::new(
+        &config.audio_path,
+        false,
+        spectrum_config,
+        config.volume_step,
+        config.seek_step,
+    )
+    .map_err(|e| {
         eprintln!("Failed to load audio file: {}", e);
         process::exit(1);
     })?;
@@ -48,7 +43,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let duration = player.duration();
     let waveform = player.waveform().clone();
     let spectrum = player.spectrum();
-    let mut ui_state = UIState::new(audio_path, duration, waveform, spectrum);
+    let mut ui_state = UIState::new(&config.audio_path, duration, waveform, spectrum);
 
     enable_raw_mode()?;
     let mut stdout = io::stdout();

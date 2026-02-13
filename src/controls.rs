@@ -20,17 +20,17 @@ pub fn handle_input(player: &Player) -> Result<ControlAction, Box<dyn std::error
                 player.toggle_play_pause();
             }
             KeyCode::Left => {
-                player.seek(-5);
+                player.seek(-player.seek_step);
             }
             KeyCode::Right => {
-                player.seek(5);
+                player.seek(player.seek_step);
             }
             KeyCode::Up => {
-                let new_volume = (player.volume() + 0.05).min(1.0);
+                let new_volume = (player.volume() + player.volume_step).min(1.0);
                 player.set_volume(new_volume);
             }
             KeyCode::Down => {
-                let new_volume = (player.volume() - 0.05).max(0.0);
+                let new_volume = (player.volume() - player.volume_step).max(0.0);
                 player.set_volume(new_volume);
             }
             KeyCode::Char('r') | KeyCode::Char('R') => {

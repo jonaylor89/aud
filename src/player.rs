@@ -22,13 +22,17 @@ pub struct Player {
     duration: Duration,
     waveform: WaveformData,
     spectrum: Option<Arc<Mutex<SpectrumAnalyzer>>>,
+    pub volume_step: f32,
+    pub seek_step: i64,
 }
 
 impl Player {
     pub fn new<P: AsRef<Path>>(
         path: P,
         enhanced_waveform: bool,
-        use_spectrum: bool,
+        spectrum_config: Option<(usize, f32, f32)>, // (num_bars, smoothing, bass_boost)
+        volume_step: f32,
+        seek_step: i64,
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let (_stream, stream_handle) = OutputStream::try_default()?;
         let sink = Sink::try_new(&stream_handle)?;
@@ -38,8 +42,8 @@ impl Player {
 
         let duration = source.total_duration().unwrap_or(Duration::from_secs(0));
 
-        let spectrum = if use_spectrum {
-            let analyzer = Arc::new(Mutex::new(SpectrumAnalyzer::new()));
+        let spectrum = if let Some((num_bars, smoothing, bass_boost)) = spectrum_config {
+            let analyzer = Arc::new(Mutex::new(SpectrumAnalyzer::new(num_bars, smoothing, bass_boost)));
             let sample_buffer = analyzer.lock().unwrap().get_sample_buffer();
             let tee_source = TeeSource::new(source.convert_samples(), sample_buffer);
             sink.append(tee_source);
@@ -61,6 +65,8 @@ impl Player {
             duration,
             waveform,
             spectrum,
+            volume_step,
+            seek_step,
         })
     }
 

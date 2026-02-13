@@ -39,10 +39,36 @@ cargo build --release
 ## Usage
 
 ```bash
-./target/release/aud [--visualizer|-v] <audio_file>
+./target/release/aud [OPTIONS] <audio_file>
 ```
 
-Use `--visualizer` or `-v` to enable live spectrum analyzer with frequency bars.
+## Options
+
+```
+--visualizer           Enable live spectrum analyzer
+--bars <n>             Number of frequency bars (default: 100)
+--smoothing <f>        Smoothing factor 0.0-1.0 (default: 0.7)
+--bass-boost <f>       Bass boost multiplier (default: 1.5)
+--volume-step <f>      Volume adjustment step (default: 0.05)
+--seek-step <n>        Seek step in seconds (default: 5)
+-h, --help             Show help message
+```
+
+### Examples
+
+```bash
+# Basic playback
+./target/release/aud song.mp3
+
+# With visualizer
+./target/release/aud --visualizer song.mp3
+
+# Custom visualizer settings
+./target/release/aud --visualizer --bars 50 --bass-boost 2.0 song.mp3
+
+# Custom seek/volume steps
+./target/release/aud --seek-step 10 --volume-step 0.1 song.mp3
+```
 
 ## Supported Formats
 

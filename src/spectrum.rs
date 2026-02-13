@@ -2,20 +2,23 @@ use rustfft::{FftPlanner, num_complex::Complex};
 use std::sync::{Arc, Mutex};
 
 const SAMPLE_SIZE: usize = 2048;
-const NUM_BARS: usize = 50;
 
 pub struct SpectrumAnalyzer {
     samples: Arc<Mutex<Vec<f32>>>,
     bars: Vec<f32>,
+    num_bars: usize,
     smoothing: f32,
+    bass_boost: f32,
 }
 
 impl SpectrumAnalyzer {
-    pub fn new() -> Self {
+    pub fn new(num_bars: usize, smoothing: f32, bass_boost: f32) -> Self {
         Self {
             samples: Arc::new(Mutex::new(Vec::new())),
-            bars: vec![0.0; NUM_BARS],
-            smoothing: 0.7,
+            bars: vec![0.0; num_bars],
+            num_bars,
+            smoothing,
+            bass_boost,
         }
     }
 
@@ -44,11 +47,11 @@ impl SpectrumAnalyzer {
             .collect();
 
         for (i, bar) in self.bars.iter_mut().enumerate() {
-            let freq_index = ((i as f32 / NUM_BARS as f32).powf(1.3) * (spectrum.len() - 1) as f32) as usize;
+            let freq_index = ((i as f32 / self.num_bars as f32).powf(1.3) * (spectrum.len() - 1) as f32) as usize;
             let freq_index = freq_index.min(spectrum.len() - 1);
 
-            let bass_boost = 1.5 * (1.0 - i as f32 / NUM_BARS as f32);
-            let amplitude = spectrum[freq_index] * (1.0 + bass_boost);
+            let bass_factor = self.bass_boost * (1.0 - i as f32 / self.num_bars as f32);
+            let amplitude = spectrum[freq_index] * (1.0 + bass_factor);
 
             *bar = *bar * self.smoothing + amplitude * (1.0 - self.smoothing);
         }
@@ -59,6 +62,6 @@ impl SpectrumAnalyzer {
     }
 
     pub fn num_bars(&self) -> usize {
-        NUM_BARS
+        self.num_bars
     }
 }
